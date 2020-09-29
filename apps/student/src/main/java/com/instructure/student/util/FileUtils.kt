@@ -33,11 +33,14 @@ object FileUtils {
             context: Context,
             submissionTarget: ShareFileSubmissionTarget? = null
     ) {
-        //context.startActivity(loadedMedia.intent)
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.setDataAndType(uri, "application/pdf")
-        intent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
-        context.startActivity(intent)
+        if (loadedMedia.intent != null) {
+            context.startActivity(loadedMedia.intent)
+        } else {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setDataAndType(uri, "application/pdf")
+            intent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
+            context.startActivity(intent)
+        }
     }
 
     @IntegerRes
