@@ -55,7 +55,7 @@ android {
     buildToolsVersion Versions.BUILD_TOOLS
 
     defaultConfig {
-        applicationId "com.instructure.candroid"
+        applicationId "com.wiley.wel.instructure.candroid"
         minSdkVersion Versions.MIN_SDK
         targetSdkVersion Versions.TARGET_SDK
         versionCode = 220
@@ -311,8 +311,6 @@ crashlytics {
 
 // Comment out this line if the reporting logic starts going wonky.
 gradle.addListener new TimingsListener(project)
-
-apply plugin: 'com.google.gms.google-services'
 
 if (coverageEnabled) {
     // ./gradlew -Pcoverage firebaseJacoco

@@ -54,9 +54,12 @@ abstract class LogoutTask(val type: Type, val uri: Uri? = null) {
     fun execute() {
         try {
             // Get the fcm token to delete the comm channel, then resume logout
+             handleLogoutTask(null)
+/*
             getFcmToken { registrationId ->
                 handleLogoutTask(registrationId)
             }
+*/
         } catch (e: Exception) {
             // Fallback to null in case anything bad happens, that way the logout still goes through
             handleLogoutTask(null)

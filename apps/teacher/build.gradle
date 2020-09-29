@@ -265,8 +265,6 @@ dependencies {
     implementation Libs.FIREBASE_JOB_DISPATCHER
 }
 
-apply plugin: 'com.google.gms.google-services'
-
 if (coverageEnabled) {
     // ./gradlew -Pcoverage firebaseJacoco
     task firebaseJacoco(type: JacocoReport) {

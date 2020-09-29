@@ -36,7 +36,9 @@ object RemoteConfigUtils {
 
     // Normal initializer
     fun initialize() {
-        initialize(FirebaseRemoteConfig.getInstance(), RemoteConfigPrefs)
+        //initialize(FirebaseRemoteConfig.getInstance(), RemoteConfigPrefs)
+        this.prefs = RemoteConfigPrefs
+        initialized = true
     }
 
     // Test initializer

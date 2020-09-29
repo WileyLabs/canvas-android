@@ -22,7 +22,6 @@ if (flutterVersionName == null) {
 }
 
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
 apply plugin: 'io.fabric'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
@@ -110,4 +109,3 @@ dependencies {
 // Comment out this line if the reporting logic starts going wonky.
 gradle.addListener new TimingsListener(project)
 
-apply plugin: 'com.google.gms.google-services'
