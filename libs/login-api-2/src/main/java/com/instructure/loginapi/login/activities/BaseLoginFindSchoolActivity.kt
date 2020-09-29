@@ -51,6 +51,7 @@ import com.instructure.loginapi.login.adapter.DomainAdapter
 import com.instructure.loginapi.login.dialog.ErrorReportDialog
 import com.instructure.loginapi.login.dialog.NoInternetConnectionDialog
 import com.instructure.loginapi.login.util.Const
+import com.instructure.loginapi.login.BuildConfig
 import com.instructure.pandautils.utils.ColorUtils
 import com.instructure.pandautils.utils.ViewStyler
 import kotlinx.android.synthetic.main.activity_find_school.*
@@ -107,9 +108,15 @@ abstract class BaseLoginFindSchoolActivity : AppCompatActivity(), ErrorReportDia
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        //val domain = createAccountForDebugging("wel.test.instructure.com")
+        val domain = createAccountForDebugging(BuildConfig.HOST)
+        validateDomain(domain);
+/*
         setContentView(R.layout.activity_find_school)
         bindViews()
         applyTheme()
+*/
     }
 
     private fun bindViews() {

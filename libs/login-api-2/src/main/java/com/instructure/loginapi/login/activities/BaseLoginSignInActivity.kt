@@ -64,6 +64,7 @@ import com.instructure.loginapi.login.util.Const.MASQUERADE_FLOW
 import com.instructure.loginapi.login.util.Const.MOBILE_VERIFY_FLOW
 import com.instructure.loginapi.login.util.Const.SNICKER_DOODLES
 import com.instructure.loginapi.login.util.PreviousUsersUtils.add
+import com.instructure.loginapi.login.BuildConfig
 import com.instructure.pandautils.utils.Utils
 import com.instructure.pandautils.utils.ViewStyler.setStatusBarLight
 import retrofit2.Call
@@ -104,12 +105,14 @@ abstract class BaseLoginSignInActivity : AppCompatActivity(), OnAuthenticationSe
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupViews() {
+/*
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         toolbar.title = accountDomain.domain
         toolbar.setNavigationIcon(R.drawable.ic_action_arrow_back)
         toolbar.navigationIcon?.isAutoMirrored = true
         toolbar.setNavigationContentDescription(R.string.close)
         toolbar.setNavigationOnClickListener { finish() }
+*/
         webView = findViewById(R.id.webView)
         clearCookies()
         CookieManager.getInstance().setAcceptCookie(true)
@@ -122,7 +125,8 @@ abstract class BaseLoginSignInActivity : AppCompatActivity(), OnAuthenticationSe
         webView.settings.cacheMode = WebSettings.LOAD_NO_CACHE
         webView.settings.setAppCacheEnabled(false)
         webView.settings.domStorageEnabled = true
-        webView.settings.userAgentString = Utils.generateUserAgent(this, userAgent())
+//        webView.settings.userAgentString = Utils.generateUserAgent(this, userAgent())
+        webView.settings.userAgentString = "native";
         webView.webViewClient = mWebViewClient
         if (0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) {
             WebView.setWebContentsDebuggingEnabled(true)
@@ -155,8 +159,14 @@ abstract class BaseLoginSignInActivity : AppCompatActivity(), OnAuthenticationSe
         }
 
         private fun handleShouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+            val redirectUrl = BuildConfig.REDIRECT_URL + "?code="
             if (overrideUrlLoading(view, url)) return true
             when {
+                url.contains(redirectUrl) -> {
+                    domain = accountDomain.domain!!
+                    val oAuthRequest = url.substring(url.indexOf(redirectUrl) + redirectUrl.length)
+                    getToken(clientId, clientSecret, oAuthRequest, mGetTokenCallback)
+                }
                 url.contains(SUCCESS_URL) -> {
                     domain = accountDomain.domain!!
                     val oAuthRequest = url.substring(url.indexOf(SUCCESS_URL) + SUCCESS_URL.length)
@@ -217,30 +227,40 @@ abstract class BaseLoginSignInActivity : AppCompatActivity(), OnAuthenticationSe
             val clientIdEditText = view.findViewById<EditText>(R.id.mobileVerifyClientId)
             val clientSecretEditText = view.findViewById<EditText>(R.id.mobileVerifyClientSecret)
             val dialog = AlertDialog.Builder(this@BaseLoginSignInActivity)
-                .setTitle(R.string.mobileVerifyDialogTitle)
-                .setView(view)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    protocol = protocolEditText.text.toString()
-                    domain = url!!
-                    clientId = clientIdEditText.text.toString()
-                    clientSecret = clientSecretEditText.text.toString()
-                    buildAuthenticationUrl(
-                        protocolEditText.text.toString(),
-                        accountDomain,
-                        clientId,
-                        false
-                    )
-                    webView.loadUrl(authenticationURL, headers)
-                }
-                .setNegativeButton(R.string.cancel) { _, _ -> mobileVerify(url, mobileVerifyCallback) }
-                .create()
+                    .setTitle(R.string.mobileVerifyDialogTitle)
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        protocol = protocolEditText.text.toString()
+                        domain = url!!
+                        clientId = clientIdEditText.text.toString()
+                        clientSecret = clientSecretEditText.text.toString()
+                        buildAuthenticationUrl(
+                                protocolEditText.text.toString(),
+                                accountDomain,
+                                clientId,
+                                false
+                        )
+                        webView.loadUrl(authenticationURL, headers)
+                    }
+                    .setNegativeButton(R.string.cancel) { _, _ -> mobileVerify(url, mobileVerifyCallback) }
+                    .create()
             dialog.setOnShowListener {
                 dialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(Color.BLACK)
                 dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.BLACK)
             }
             dialog.show()
         } else {
-            mobileVerify(url, mobileVerifyCallback)
+            //mobileVerify(url, mobileVerifyCallback)
+            val domain = BuildConfig.HOST
+            accountDomain.domain = domain
+
+            clientId = BuildConfig.CLIENT_ID
+            clientSecret = BuildConfig.CLIENT_SECRET
+
+            val apiProtocol = "https"
+            protocol = "https"
+            buildAuthenticationUrl(apiProtocol, accountDomain, clientId, false)
+            loadAuthenticationUrl(apiProtocol, domain)
         }
     }
 
@@ -258,62 +278,62 @@ abstract class BaseLoginSignInActivity : AppCompatActivity(), OnAuthenticationSe
 
     val headers: Map<String, String>
         get() = mapOf(
-            "accept-language" to acceptedLanguageString,
-            "user-agent" to Utils.generateUserAgent(this, userAgent()),
-            "session_locale" to Locale.getDefault().language
+                "accept-language" to acceptedLanguageString,
+                "user-agent" to Utils.generateUserAgent(this, userAgent()),
+                "session_locale" to Locale.getDefault().language
         )
 
     //region Callbacks
     private var mobileVerifyCallback: StatusCallback<DomainVerificationResult> =
-        object : StatusCallback<DomainVerificationResult>() {
-            override fun onResponse(response: Response<DomainVerificationResult>, linkHeaders: LinkHeaders, type: ApiType) {
-                if (type.isCache) return
-                val domainVerificationResult = response.body()
-                if (domainVerificationResult!!.result === DomainVerificationResult.DomainVerificationCode.Success) {
-                    //Domain is now verified.
-                    //save domain to the preferences.
-                    var domain: String?
+            object : StatusCallback<DomainVerificationResult>() {
+                override fun onResponse(response: Response<DomainVerificationResult>, linkHeaders: LinkHeaders, type: ApiType) {
+                    if (type.isCache) return
+                    val domainVerificationResult = response.body()
+                    if (domainVerificationResult!!.result === DomainVerificationResult.DomainVerificationCode.Success) {
+                        //Domain is now verified.
+                        //save domain to the preferences.
+                        var domain: String?
 
-                    //mobile verify can change the hostname we need to use
-                    domainVerificationResult!!.baseUrl
-                    domain = if (domainVerificationResult.baseUrl != "") {
-                        domainVerificationResult.baseUrl
+                        //mobile verify can change the hostname we need to use
+                        domainVerificationResult!!.baseUrl
+                        domain = if (domainVerificationResult.baseUrl != "") {
+                            domainVerificationResult.baseUrl
+                        } else {
+                            accountDomain.domain
+                        }
+                        if (domain!!.endsWith("/")) {
+                            domain = domain.substring(0, domain.length - 1)
+                        }
+                        accountDomain.domain = domain
+                        clientId = domainVerificationResult.clientId
+                        clientSecret = domainVerificationResult.clientSecret
+
+                        //Get the protocol
+                        val apiProtocol = domainVerificationResult.protocol
+
+                        //Set the protocol
+                        protocol = domainVerificationResult.protocol
+                        buildAuthenticationUrl(apiProtocol, accountDomain, clientId, false)
+                        loadAuthenticationUrl(apiProtocol, domain)
                     } else {
-                        accountDomain.domain
-                    }
-                    if (domain!!.endsWith("/")) {
-                        domain = domain.substring(0, domain.length - 1)
-                    }
-                    accountDomain.domain = domain
-                    clientId = domainVerificationResult.clientId
-                    clientSecret = domainVerificationResult.clientSecret
-
-                    //Get the protocol
-                    val apiProtocol = domainVerificationResult.protocol
-
-                    //Set the protocol
-                    protocol = domainVerificationResult.protocol
-                    buildAuthenticationUrl(apiProtocol, accountDomain, clientId, false)
-                    loadAuthenticationUrl(apiProtocol, domain)
-                } else {
-                    //Error message
-                    val errorId: Int = when (domainVerificationResult?.result) {
-                        DomainVerificationResult.DomainVerificationCode.GeneralError -> R.string.mobileVerifyGeneral
-                        DomainVerificationResult.DomainVerificationCode.DomainNotAuthorized -> R.string.mobileVerifyDomainUnauthorized
-                        DomainVerificationResult.DomainVerificationCode.UnknownUserAgent -> R.string.mobileVerifyUserAgentUnauthorized
-                        else -> R.string.mobileVerifyUnknownError
-                    }
-                    if (!this@BaseLoginSignInActivity.isFinishing) {
-                        val builder = AlertDialog.Builder(this@BaseLoginSignInActivity)
-                        builder.setTitle(R.string.errorOccurred)
-                        builder.setMessage(errorId)
-                        builder.setCancelable(true)
-                        val dialog = builder.create()
-                        dialog.show()
+                        //Error message
+                        val errorId: Int = when (domainVerificationResult?.result) {
+                            DomainVerificationResult.DomainVerificationCode.GeneralError -> R.string.mobileVerifyGeneral
+                            DomainVerificationResult.DomainVerificationCode.DomainNotAuthorized -> R.string.mobileVerifyDomainUnauthorized
+                            DomainVerificationResult.DomainVerificationCode.UnknownUserAgent -> R.string.mobileVerifyUserAgentUnauthorized
+                            else -> R.string.mobileVerifyUnknownError
+                        }
+                        if (!this@BaseLoginSignInActivity.isFinishing) {
+                            val builder = AlertDialog.Builder(this@BaseLoginSignInActivity)
+                            builder.setTitle(R.string.errorOccurred)
+                            builder.setMessage(errorId)
+                            builder.setCancelable(true)
+                            val dialog = builder.create()
+                            dialog.show()
+                        }
                     }
                 }
             }
-        }
 
     protected fun loadAuthenticationUrl(apiProtocol: String, domain: String?) {
         if (canvasLogin == CANVAS_LOGIN_FLOW) {
@@ -355,21 +375,24 @@ abstract class BaseLoginSignInActivity : AppCompatActivity(), OnAuthenticationSe
             domain = domain.substring(0, domain.length - 1)
         }
         val builder = Uri.Builder()
-            .scheme(protocol)
-            .authority(domain)
-            .appendPath("login")
-            .appendPath("oauth2")
-            .appendPath("auth")
-            .appendQueryParameter("client_id", clientId)
-            .appendQueryParameter("response_type", "code")
-            .appendQueryParameter("mobile", "1")
-            .appendQueryParameter("purpose", deviceName)
+                .scheme(protocol)
+                .authority(domain)
+                .appendPath("login")
+                .appendPath("oauth2")
+                .appendPath("auth")
+                .appendQueryParameter("client_id", clientId)
+                .appendQueryParameter("response_type", "code")
+                .appendQueryParameter("mobile", "1")
+                .appendQueryParameter("purpose", deviceName)
+                .appendQueryParameter("redirect_uri", BuildConfig.REDIRECT_URL)
+/*
         if (forceAuthRedirect || canvasLogin == MOBILE_VERIFY_FLOW || domain != null && domain.contains(".test.")) {
             //Skip mobile verify
             builder.appendQueryParameter("redirect_uri", "urn:ietf:wg:oauth:2.0:oob")
         } else {
             builder.appendQueryParameter("redirect_uri", "https://canvas.instructure.com/login/oauth2/auth")
         }
+*/
 
         //If an authentication provider is supplied we need to pass that along. This should only be appended if one exists.
         val authenticationProvider = accountDomain.authenticationProvider
@@ -385,62 +408,62 @@ abstract class BaseLoginSignInActivity : AppCompatActivity(), OnAuthenticationSe
     }
 
     private val mGetTokenCallback: StatusCallback<OAuthTokenResponse> =
-        object : StatusCallback<OAuthTokenResponse>() {
-            override fun onResponse(response: Response<OAuthTokenResponse>, linkHeaders: LinkHeaders, type: ApiType) {
-                if (type.isCache) return
-                val bundle = Bundle()
-                bundle.putString(AnalyticsParamConstants.DOMAIN_PARAM, domain)
-                logEvent(AnalyticsEventConstants.LOGIN_SUCCESS, bundle)
-                val token = response.body()
-                refreshToken = token!!.refreshToken!!
-                accessToken = token.accessToken!!
-                @Suppress("DEPRECATION")
-                ApiPrefs.token = "" // TODO: Remove when we're 100% using refresh tokens
+            object : StatusCallback<OAuthTokenResponse>() {
+                override fun onResponse(response: Response<OAuthTokenResponse>, linkHeaders: LinkHeaders, type: ApiType) {
+                    if (type.isCache) return
+                    val bundle = Bundle()
+                    bundle.putString(AnalyticsParamConstants.DOMAIN_PARAM, domain)
+                    logEvent(AnalyticsEventConstants.LOGIN_SUCCESS, bundle)
+                    val token = response.body()
+                    refreshToken = token!!.refreshToken!!
+                    accessToken = token.accessToken!!
+                    @Suppress("DEPRECATION")
+                    ApiPrefs.token = "" // TODO: Remove when we're 100% using refresh tokens
 
-                // We now need to get the cache user
-                getSelf(object : StatusCallback<User>() {
-                    override fun onResponse(response: Response<User>, linkHeaders: LinkHeaders, type: ApiType) {
-                        if (type.isAPI) {
-                            user = response.body()
-                            val userResponse = response.body()
-                            val domain = domain
-                            val protocol = protocol
-                            val user = SignedInUser(
-                                userResponse!!,
-                                domain,
-                                protocol,
-                                "",  // TODO - delete once we move over 100% to refresh tokens
-                                token.accessToken!!,
-                                token.refreshToken!!,
-                                clientId,
-                                clientSecret,
-                                null,
-                                null
-                            )
-                            add(this@BaseLoginSignInActivity, user)
-                            refreshWidgets()
-                            handleLaunchApplicationMainActivityIntent()
+                    // We now need to get the cache user
+                    getSelf(object : StatusCallback<User>() {
+                        override fun onResponse(response: Response<User>, linkHeaders: LinkHeaders, type: ApiType) {
+                            if (type.isAPI) {
+                                user = response.body()
+                                val userResponse = response.body()
+                                val domain = domain
+                                val protocol = protocol
+                                val user = SignedInUser(
+                                        userResponse!!,
+                                        domain,
+                                        protocol,
+                                        "",  // TODO - delete once we move over 100% to refresh tokens
+                                        token.accessToken!!,
+                                        token.refreshToken!!,
+                                        clientId,
+                                        clientSecret,
+                                        null,
+                                        null
+                                )
+                                add(this@BaseLoginSignInActivity, user)
+                                refreshWidgets()
+                                handleLaunchApplicationMainActivityIntent()
+                            }
                         }
-                    }
-                })
-            }
-
-            override fun onFail(call: Call<OAuthTokenResponse>?, error: Throwable, response: Response<*>?) {
-                val bundle = Bundle()
-                bundle.putString(AnalyticsParamConstants.DOMAIN_PARAM, domain)
-                logEvent(AnalyticsEventConstants.LOGIN_FAILURE, bundle)
-                if (!specialCase) {
-                    Toast.makeText(
-                        this@BaseLoginSignInActivity,
-                        R.string.errorOccurred,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    specialCase = false
+                    })
                 }
-                webView.loadUrl(authenticationURL, headers)
+
+                override fun onFail(call: Call<OAuthTokenResponse>?, error: Throwable, response: Response<*>?) {
+                    val bundle = Bundle()
+                    bundle.putString(AnalyticsParamConstants.DOMAIN_PARAM, domain)
+                    logEvent(AnalyticsEventConstants.LOGIN_FAILURE, bundle)
+                    if (!specialCase) {
+                        Toast.makeText(
+                                this@BaseLoginSignInActivity,
+                                R.string.errorOccurred,
+                                Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        specialCase = false
+                    }
+                    webView.loadUrl(authenticationURL, headers)
+                }
             }
-        }
 
     /**
      * Override and do not call super if you need additional logic before launching the main activity intent.

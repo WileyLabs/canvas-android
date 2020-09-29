@@ -18,92 +18,26 @@
 package com.instructure.student.util
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.annotation.IntegerRes
-import com.instructure.canvasapi2.utils.ApiPrefs
 import com.instructure.pandautils.loaders.OpenMediaAsyncTaskLoader
 import com.instructure.student.R
-import com.instructure.student.activity.CandroidPSPDFActivity
 import com.instructure.student.activity.ShareFileSubmissionTarget
-import com.pspdfkit.PSPDFKit
-import com.pspdfkit.annotations.AnnotationType
-import com.pspdfkit.configuration.activity.PdfActivityConfiguration
-import com.pspdfkit.configuration.activity.ThumbnailBarMode
-import com.pspdfkit.configuration.page.PageFitMode
-import com.pspdfkit.configuration.page.PageScrollDirection
-import com.pspdfkit.preferences.PSPDFKitPreferences
-import com.pspdfkit.ui.PdfActivityIntentBuilder
-import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 
 object FileUtils {
 
     fun showPdfDocument(
-        uri: Uri,
-        loadedMedia: OpenMediaAsyncTaskLoader.LoadedMedia,
-        context: Context,
-        submissionTarget: ShareFileSubmissionTarget? = null
+            uri: Uri,
+            loadedMedia: OpenMediaAsyncTaskLoader.LoadedMedia,
+            context: Context,
+            submissionTarget: ShareFileSubmissionTarget? = null
     ) {
-        val annotationCreationList = listOf(
-                AnnotationTool.INK,
-                AnnotationTool.HIGHLIGHT,
-                AnnotationTool.STRIKEOUT,
-                AnnotationTool.SQUARE,
-                AnnotationTool.NOTE,
-                AnnotationTool.FREETEXT,
-                AnnotationTool.ERASER
-        )
-
-        val annotationEditList = listOf(
-                AnnotationType.INK,
-                AnnotationType.HIGHLIGHT,
-                AnnotationType.STRIKEOUT,
-                AnnotationType.SQUARE,
-                AnnotationType.NOTE,
-                AnnotationType.FREETEXT
-        )
-        if (!PSPDFKitPreferences.get(context).isAnnotationCreatorSet) {
-            PSPDFKitPreferences.get(context).setAnnotationCreator(ApiPrefs.user?.shortName.orEmpty())
-        }
-
-        val pspdfActivityConfiguration: PdfActivityConfiguration
-
-        if (loadedMedia.isSubmission) {
-            // We don't want to allow users to edit for submission viewing
-            pspdfActivityConfiguration = PdfActivityConfiguration.Builder(context)
-                .scrollDirection(PageScrollDirection.HORIZONTAL)
-                .showThumbnailGrid()
-                .setThumbnailBarMode(ThumbnailBarMode.THUMBNAIL_BAR_MODE_PINNED)
-                .disableAnnotationEditing()
-                .disableAnnotationList()
-                .disableDocumentEditor()
-                .fitMode(PageFitMode.FIT_TO_WIDTH)
-                .build()
-        } else {
-            // Standard behavior
-            pspdfActivityConfiguration = PdfActivityConfiguration.Builder(context)
-                .scrollDirection(PageScrollDirection.HORIZONTAL)
-                .showThumbnailGrid()
-                .setThumbnailBarMode(ThumbnailBarMode.THUMBNAIL_BAR_MODE_PINNED)
-                .enableDocumentEditor()
-                .enabledAnnotationTools(annotationCreationList)
-                .editableAnnotationTypes(annotationEditList)
-                .fitMode(PageFitMode.FIT_TO_WIDTH)
-                .build()
-        }
-
-        if (PSPDFKit.isOpenableUri(context, uri)) {
-            val intent = PdfActivityIntentBuilder
-                .fromUri(context, uri)
-                .configuration(pspdfActivityConfiguration)
-                .activityClass(CandroidPSPDFActivity::class.java)
-                .build()
-            intent.putExtra(com.instructure.pandautils.utils.Const.SUBMISSION_TARGET, submissionTarget)
-            context.startActivity(intent)
-        } else {
-            //If we still can't open this PDF, we will then attempt to pass it off to the user's pdfviewer
-            context.startActivity(loadedMedia.intent)
-        }
-
+        //context.startActivity(loadedMedia.intent)
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(uri, "application/pdf")
+        intent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
+        context.startActivity(intent)
     }
 
     @IntegerRes

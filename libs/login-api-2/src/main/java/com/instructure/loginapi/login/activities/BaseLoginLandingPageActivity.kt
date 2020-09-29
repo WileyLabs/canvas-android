@@ -87,12 +87,20 @@ abstract class BaseLoginLandingPageActivity : AppCompatActivity(), ErrorReportDi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val intent = beginFindSchoolFlow()
+        intent.putExtra(Const.CANVAS_LOGIN, canvasLogin)
+        startActivity(intent)
+        finish();
+
+/*
         setContentView(R.layout.activity_login_landing_page)
         bindViews()
         applyTheme()
         loadPreviousUsers()
         setupGesture()
         setupSnickerDoodles()
+*/
     }
 
     private fun bindViews() {

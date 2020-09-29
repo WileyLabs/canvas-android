@@ -89,20 +89,12 @@ repositories {
     jcenter()
     maven { url 'https://maven.fabric.io/public' }
     maven { url "https://raw.github.com/laenger/maven-releases/master/releases" }
-    maven {
-        credentials {
-            username pspdfMavenUser
-            password pspdfMavenPass
-        }
-        url 'https://customers.pspdfkit.com/maven/'
-    }
 }
 
 dependencies {
     /* Modules */
     api project(path: ':pandautils')
 
-    api Libs.PSPDFKIT
     implementation 'com.jakewharton:disklrucache:2.0.2'
 
     androidTestImplementation Libs.JUNIT

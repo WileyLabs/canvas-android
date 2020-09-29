@@ -33,9 +33,6 @@ import com.instructure.pandautils.utils.Const
 import com.instructure.teacher.BuildConfig
 import com.instructure.teacher.R
 import com.instructure.teacher.tasks.TeacherLogoutTask
-import com.pspdfkit.PSPDFKit
-import com.pspdfkit.exceptions.InvalidPSPDFKitLicenseException
-import com.pspdfkit.exceptions.PSPDFKitInitializationFailedException
 import io.fabric.sdk.android.Fabric
 
 class AppManager : com.instructure.canvasapi2.AppManager() {
@@ -64,14 +61,6 @@ class AppManager : com.instructure.canvasapi2.AppManager() {
         }
 
         ColorKeeper.defaultColor = getColorCompat(R.color.defaultPrimary)
-
-        try {
-            PSPDFKit.initialize(this, BuildConfig.PSPDFKIT_LICENSE_KEY)
-        } catch (e: PSPDFKitInitializationFailedException) {
-            Logger.e("Current device is not compatible with PSPDFKIT!")
-        } catch (e: InvalidPSPDFKitLicenseException) {
-            Logger.e("Invalid or Trial PSPDFKIT License!")
-        }
 
         MasqueradeHelper.masqueradeLogoutTask = Runnable { TeacherLogoutTask(LogoutTask.Type.LOGOUT).execute() }
 

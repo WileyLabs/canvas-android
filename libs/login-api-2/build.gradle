@@ -45,6 +45,14 @@ android {
         /* BuildConfig Fields */
         buildConfigField "boolean", "IS_TESTING", isTesting()
         buildConfigField "String", "ANONYMOUS_SCHOOL_DOMAIN", "\"$anonymousSchoolDomain\""
+        buildConfigField "String", "CLIENT_ID", "\"$clientId\""
+        buildConfigField "String", "CLIENT_SECRET", "\"$clientSecret\""
+
+        buildConfigField "String", "HOST", "\"$host\""
+        buildConfigField "String", "REDIRECT_URL", "\"$redirectUrl\""
+        buildConfigField "String", "CALLBACK_URL", "\"$callbackURL\""
+        buildConfigField "String", "BASE_URL", "\"$baseURL\""
+        buildConfigField "String", "USER_AGENT", "\"$userAgent\""
     }
 
     buildTypes {

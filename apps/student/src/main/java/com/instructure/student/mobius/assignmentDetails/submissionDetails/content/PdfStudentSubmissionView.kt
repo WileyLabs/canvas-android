@@ -21,7 +21,6 @@ import android.content.Context
 import android.graphics.Color
 import android.util.TypedValue
 import android.view.Gravity
-import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
@@ -39,16 +38,10 @@ import com.instructure.canvasapi2.utils.weave.catch
 import com.instructure.canvasapi2.utils.weave.tryWeave
 import com.instructure.loginapi.login.dialog.NoInternetConnectionDialog
 import com.instructure.pandautils.utils.onClick
-import com.instructure.pandautils.utils.setGone
-import com.instructure.pandautils.utils.setVisible
 import com.instructure.pandautils.views.ProgressiveCanvasLoadingView
 import com.instructure.student.AnnotationComments.AnnotationCommentListFragment
 import com.instructure.student.R
 import com.instructure.student.router.RouteMatcher
-import com.pspdfkit.preferences.PSPDFKitPreferences
-import com.pspdfkit.ui.inspector.PropertyInspectorCoordinatorLayout
-import com.pspdfkit.ui.special_mode.manager.AnnotationManager
-import com.pspdfkit.ui.toolbar.ToolbarCoordinatorLayout
 import kotlinx.android.synthetic.main.view_pdf_student_submission.view.*
 import kotlinx.coroutines.Job
 import okhttp3.ResponseBody
@@ -61,15 +54,11 @@ import java.util.ArrayList
 class PdfStudentSubmissionView(
         context: Context,
         private val pdfUrl: String
-) : PdfSubmissionView(context), AnnotationManager.OnAnnotationCreationModeChangeListener, AnnotationManager.OnAnnotationEditingModeChangeListener {
+) : PdfSubmissionView(context) {
 
     private var initJob: Job? = null
     private var deleteJob: Job? = null
 
-    override val annotationToolbarLayout: ToolbarCoordinatorLayout
-        get() = findViewById(R.id.annotationToolbarLayout)
-    override val inspectorCoordinatorLayout: PropertyInspectorCoordinatorLayout
-        get() = findViewById(R.id.inspectorCoordinatorLayout)
     override val commentsButton: ImageView
         get() = findViewById(R.id.commentsButton)
     override val loadingContainer: FrameLayout
@@ -88,12 +77,14 @@ class PdfStudentSubmissionView(
     }
 
     override fun showFileError() {
+/*
         loadingView.setGone()
         retryLoadingContainer.setVisible()
         retryLoadingButton.onClick {
             setLoading(true)
             setup()
         }
+*/
     }
 
     override fun configureCommentView(commentsButton: ImageView) {
@@ -119,18 +110,14 @@ class PdfStudentSubmissionView(
     }
 
     init {
-        if (!PSPDFKitPreferences.get(getContext()).isAnnotationCreatorSet) {
-            PSPDFKitPreferences.get(getContext()).setAnnotationCreator(ApiPrefs.user?.name)
-        }
-
-        View.inflate(context, R.layout.view_pdf_student_submission, this)
-
         setLoading(true)
     }
 
     private fun setLoading(isLoading: Boolean) {
+/*
         loadingView?.setVisible(isLoading)
         contentRoot?.setVisible(!isLoading)
+*/
     }
 
     override fun onAttachedToWindow() {
@@ -147,7 +134,6 @@ class PdfStudentSubmissionView(
             docSession.annotationMetadata?.permissions = "read"
         }
         // Default is to have top inset, remove this since there will be no toolbar
-        pdfFragment?.setInsets(0, 0, 0, 0)
         super.attachDocListener()
     }
 
@@ -165,7 +151,7 @@ class PdfStudentSubmissionView(
 
     @SuppressLint("CommitTransaction")
     override fun setFragment(fragment: Fragment) {
-        if (isAttachedToWindow) supportFragmentManager.beginTransaction().replace(content.id, fragment).commitNowAllowingStateLoss()
+        //if (isAttachedToWindow) supportFragmentManager.beginTransaction().replace(content.id, fragment).commitNowAllowingStateLoss()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

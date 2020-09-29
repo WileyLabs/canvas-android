@@ -40,9 +40,6 @@ import com.instructure.student.R
 import com.instructure.student.flutterChannels.FlutterComm
 import com.instructure.student.service.StudentPageViewService
 import com.instructure.student.tasks.StudentLogoutTask
-import com.pspdfkit.PSPDFKit
-import com.pspdfkit.exceptions.InvalidPSPDFKitLicenseException
-import com.pspdfkit.exceptions.PSPDFKitInitializationFailedException
 import io.fabric.sdk.android.Fabric
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -71,8 +68,6 @@ class AppManager : com.instructure.canvasapi2.AppManager(), AnalyticsEventHandli
 
         // Hold off on initializing this until we emit the user properties.
         RemoteConfigUtils.initialize()
-
-        initPSPDFKit()
 
         val crashlyticsKit = Crashlytics.Builder()
             .core(CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
@@ -200,16 +195,6 @@ class AppManager : com.instructure.canvasapi2.AppManager(), AnalyticsEventHandli
                 .setValue(duration)
                 .build()
         )
-    }
-
-    private fun initPSPDFKit() {
-        try {
-            PSPDFKit.initialize(this, BuildConfig.PSPDFKIT_LICENSE_KEY)
-        } catch (e: PSPDFKitInitializationFailedException) {
-            Logger.e("Current device is not compatible with PSPDFKIT!")
-        } catch (e: InvalidPSPDFKitLicenseException) {
-            Logger.e("Invalid or Trial PSPDFKIT License!")
-        }
     }
 
     override fun performLogoutOnAuthError() {

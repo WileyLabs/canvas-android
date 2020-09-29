@@ -69,7 +69,6 @@ android {
 
         /* Add private data */
         PrivateData.merge(project, "student")
-        buildConfigField "String", "PSPDFKIT_LICENSE_KEY", "\"$pspdfkitLicenseKey\""
         addManifestPlaceholders([
                 crashlyticsApiKey: "$crashlyticsApiKey"
         ])

@@ -31,6 +31,7 @@
         android:background="@color/white"
         android:elevation="0dp"
         app:theme="@style/ToolBarStyleDark"
+        android:visibility="gone"
         tools:ignore="UnusedAttribute" />
 
     <WebView
