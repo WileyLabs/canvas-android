@@ -92,7 +92,7 @@ class AssignmentDetailsView(
     override fun onConnect(output: Consumer<AssignmentDetailsEvent>) {
         submissionStatusFailed.onClick { output.accept(AssignmentDetailsEvent.ViewUploadStatusClicked) }
         submissionStatusUploading.onClick { output.accept(AssignmentDetailsEvent.ViewUploadStatusClicked) }
-        submissionRubricButton.onClick { output.accept(AssignmentDetailsEvent.ViewSubmissionClicked) }
+        submissionRubricButton.onClick { output.accept(AssignmentDetailsEvent.SubmitAssignmentClicked) }
         gradeContainer.onClick { output.accept(AssignmentDetailsEvent.ViewSubmissionClicked) }
         submitButton.onClick {
             logEvent(AnalyticsEventConstants.ASSIGNMENT_SUBMIT_SELECTED)
@@ -360,8 +360,8 @@ class AssignmentDetailsView(
     fun showFileUploadView(assignment: Assignment) {
         logEvent(AnalyticsEventConstants.SUBMIT_FILEUPLOAD_SELECTED)
         RouteMatcher.route(
-            context,
-            PickerSubmissionUploadFragment.makeRoute(canvasContext, assignment, PickerSubmissionMode.FileSubmission)
+                context,
+                PickerSubmissionUploadFragment.makeRoute(canvasContext, assignment, PickerSubmissionMode.FileSubmission)
         )
     }
 
