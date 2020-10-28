@@ -168,7 +168,7 @@ class HelpDialogStyled : DialogFragment() {
 
         // Share love link is specific to Android - Add it to the list returned from the API
         val linksList = list.toMutableList().apply {
-            add(HelpLink("", "", listOf("student"), "#share_the_love", getString(R.string.shareYourLove), getString(R.string.shareYourLoveDetails)))
+//            add(HelpLink("", "", listOf("student"), "#share_the_love", getString(R.string.shareYourLove), getString(R.string.shareYourLoveDetails)))
         }
         linksList
                 // Only want links for students
@@ -176,11 +176,18 @@ class HelpDialogStyled : DialogFragment() {
                     (link.availableTo.contains("student") || link.availableTo.contains("user"))
                             && (link.url != "#teacher_feedback" || awaitApi<List<Course>> { CourseManager.getAllFavoriteCourses(false, it) }.filter { !it.isTeacher }.count() > 0)
                 }.forEach { link ->
-                    val view = layoutInflater.inflate(R.layout.view_help_link, null)
-                    view.title.text = link.text
-                    view.subtitle.text = link.subtext
-                    view.onClick { linkClick(link) }
-                    container.addView(view)
+                    if (link.id != "covid") {
+                        val view = layoutInflater.inflate(R.layout.view_help_link, null)
+                        if (link.id == "link0") {
+                            view.title.text = getString(R.string.contact_us_title)
+                            view.subtitle.text = getString(R.string.contact_us_subtitle)
+                        } else {
+                            view.title.text = link.text
+                            view.subtitle.text = link.subtext
+                            view.onClick { linkClick(link) }
+                        }
+                        container.addView(view)
+                    }
                 }
     }
 
